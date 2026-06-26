@@ -1,0 +1,38 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "TeamLens for Linux",
+  "version": "0.1.0",
+  "identifier": "com.teamlens.linux-agent",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "createUpdaterArtifacts": true,
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEM4RDc0QjRFNkY2QzQ4RTgKUldUb1NHeHZUa3ZYeUtHUzZhODJoZHZISG8zZEorZTlZSnBTalcrYWRVUTM1UDQ0UGJZeGRHWjYK",
+      "endpoints": [
+        "https://github.com/teamlens-co/teamlens-linux-agent/releases/latest/download/teamlens-linux-agent-latest.json"
+      ]
+    }
+  }
+}

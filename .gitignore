@@ -1,0 +1,114 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+.env
+
+# Monorepo root ignore rules
+# Prevent build outputs, runtime data, and secrets from being committed.
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+!.vscode/extensions.json
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Node / Next / TypeScript artifacts
+**/node_modules/
+**/.next/
+**/out/
+**/build/
+**/dist/
+**/dist-ssr/
+**/coverage/
+**/.turbo/
+**/.cache/
+**/*.tsbuildinfo
+
+# Rust / Tauri build artifacts
+**/target/
+**/*.pdb
+**/*.rlib
+**/*.rmeta
+
+# Backend runtime uploads
+backend/uploads/
+
+# Agent runtime/build files stay ignored, but source files are part of this repo.
+/agent/*
+!/agent/desktop-agent/
+/agent/desktop-agent/*
+!/agent/desktop-agent/package.json
+!/agent/desktop-agent/package-lock.json
+!/agent/desktop-agent/index.html
+!/agent/desktop-agent/tsconfig.json
+!/agent/desktop-agent/tsconfig.node.json
+!/agent/desktop-agent/vite.config.ts
+!/agent/desktop-agent/README.md
+!/agent/desktop-agent/AGENT_AUTO_UPDATE.md
+!/agent/desktop-agent/public/
+!/agent/desktop-agent/public/**
+!/agent/desktop-agent/src/
+!/agent/desktop-agent/src/**
+!/agent/desktop-agent/src-tauri/
+/agent/desktop-agent/src-tauri/*
+!/agent/desktop-agent/src-tauri/Cargo.toml
+!/agent/desktop-agent/src-tauri/Cargo.lock
+!/agent/desktop-agent/src-tauri/build.rs
+!/agent/desktop-agent/src-tauri/tauri.conf.json
+!/agent/desktop-agent/src-tauri/capabilities/
+!/agent/desktop-agent/src-tauri/capabilities/**
+!/agent/desktop-agent/src-tauri/icons/
+!/agent/desktop-agent/src-tauri/icons/**
+!/agent/desktop-agent/src-tauri/src/
+!/agent/desktop-agent/src-tauri/src/**
+
+# Binary/package artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+*.zip
+*.7z
+*.tar
+*.gz
+*.tgz
+*.rar
