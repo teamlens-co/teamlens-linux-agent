@@ -45,6 +45,12 @@
         },
         {
           "url": "https://test.teamlens.co/**"
+        },
+        {
+          "url": "https://api.teamlens.co/**"
+        },
+        {
+          "url": "wss://api.teamlens.co/**"
         }
       ]
     }
