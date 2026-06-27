@@ -1,6 +1,6 @@
 [package]
 name = "teamlens-linux-agent"
-version = "0.1.1"
+version = "0.1.2"
 description = "TeamLens desktop agent for Linux"
 authors = ["you"]
 edition = "2021"

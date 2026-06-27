@@ -105,7 +105,92 @@ fn create_screen_capturer_state() -> Result<ScreenCapturerState, String> {
     })
 }
 
+#[cfg(target_os = "linux")]
+fn capture_screen_frame_x11() -> Result<(Vec<u8>, usize, usize), String> {
+    use x11::xlib;
+    unsafe {
+        let display = xlib::XOpenDisplay(std::ptr::null());
+        if display.is_null() {
+            return Err("X11: XOpenDisplay failed. Is DISPLAY set?".to_string());
+        }
+        let screen = xlib::XDefaultScreen(display);
+        let root = xlib::XDefaultRootWindow(display);
+        let width = xlib::XDisplayWidth(display, screen) as usize;
+        let height = xlib::XDisplayHeight(display, screen) as usize;
+
+        let image = xlib::XGetImage(
+            display,
+            root,
+            0,
+            0,
+            width as u32,
+            height as u32,
+            xlib::XAllPlanes(),
+            xlib::ZPixmap,
+        );
+        if image.is_null() {
+            xlib::XCloseDisplay(display);
+            return Err("X11: XGetImage failed".to_string());
+        }
+
+        let img = &*image;
+        let bpl = img.bytes_per_line as usize;
+        let bits_per_pixel = img.bits_per_pixel as usize;
+        let data = img.data as *const u8;
+        let red_shift = img.red_mask.trailing_zeros();
+        let green_shift = img.green_mask.trailing_zeros();
+        let blue_shift = img.blue_mask.trailing_zeros();
+
+        let mut out = Vec::with_capacity(width * height * 4);
+
+        for y in 0..height {
+            for x in 0..width {
+                let (r, g, b) = if bits_per_pixel == 32 {
+                    let pixel =
+                        std::ptr::read_unaligned(data.add(y * bpl + x * 4) as *const u32);
+                    (
+                        ((pixel & img.red_mask) >> red_shift) as u8,
+                        ((pixel & img.green_mask) >> green_shift) as u8,
+                        ((pixel & img.blue_mask) >> blue_shift) as u8,
+                    )
+                } else if bits_per_pixel == 24 {
+                    let p = data.add(y * bpl + x * 3);
+                    // 24-bit still packs R/G/B, but order depends on server. We
+                    // decompose with masks at byte level for safety.
+                    let pixel = (*p.add(0) as u32)
+                        | ((*p.add(1) as u32) << 8)
+                        | ((*p.add(2) as u32) << 16);
+                    (
+                        ((pixel & img.red_mask) >> red_shift) as u8,
+                        ((pixel & img.green_mask) >> green_shift) as u8,
+                        ((pixel & img.blue_mask) >> blue_shift) as u8,
+                    )
+                } else {
+                    xlib::XDestroyImage(image);
+                    xlib::XCloseDisplay(display);
+                    return Err(format!("X11: unsupported bits_per_pixel {}", bits_per_pixel));
+                };
+
+                out.push(b);
+                out.push(g);
+                out.push(r);
+                out.push(255);
+            }
+        }
+
+        xlib::XDestroyImage(image);
+        xlib::XCloseDisplay(display);
+        Ok((out, width, height))
+    }
+}
+
 fn capture_screen_frame() -> Result<(Vec<u8>, usize, usize), String> {
+    #[cfg(target_os = "linux")]
+    match capture_screen_frame_x11() {
+        Ok(frame) => return Ok(frame),
+        Err(err) => eprintln!("[ScreenCapture] X11 capture failed, falling back to scrap: {}", err),
+    }
+
     let _capture_guard = SCREEN_CAPTURE_LOCK
         .get_or_init(|| Mutex::new(()))
         .lock()
