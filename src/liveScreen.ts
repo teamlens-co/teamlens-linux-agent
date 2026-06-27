@@ -293,6 +293,31 @@ const startFramePump = (
 
 // ─── Screen capture ───────────────────────────────────────────────────────────
 
+const captureScreenDisplayMedia = async (): Promise<CaptureHandle | null> => {
+  try {
+    if (!navigator.mediaDevices?.getDisplayMedia) {
+      return null;
+    }
+    const stream = await navigator.mediaDevices.getDisplayMedia({
+      video: { cursor: "always" } as DisplayMediaStreamConstraints["video"],
+      audio: false,
+    });
+    const videoTrack = stream.getVideoTracks()[0];
+    if (!videoTrack) {
+      stream.getTracks().forEach((t) => t.stop());
+      return null;
+    }
+    videoTrack.contentHint = "detail";
+    return {
+      stream,
+      stop: () => stream.getTracks().forEach((t) => t.stop()),
+    };
+  } catch (error) {
+    console.warn("getDisplayMedia fallback capture failed", error);
+    return null;
+  }
+};
+
 const captureScreenNative = async (): Promise<CaptureHandle> => {
   const buffer = new DoubleBuffer();
   const decoder = new GpuDecoder();
@@ -492,16 +517,28 @@ export const useEmployeeLiveScreen = ({
           return;
         }
 
-        const capture = await ensureNativeCapture();
+        let capture = await ensureNativeCapture();
+        let usingDisplayMedia = false;
+        const nativeVideoTrack = capture?.stream.getVideoTracks()[0];
+        if (!capture || nativeVideoTrack?.readyState !== "live") {
+          setLiveMessage("Native capture unavailable. Trying browser screen share fallback...");
+          capture = await captureScreenDisplayMedia();
+          usingDisplayMedia = true;
+        }
+
         const videoTrack = capture?.stream.getVideoTracks()[0];
         if (!capture || videoTrack?.readyState !== "live") {
           socket.emit("live:view-ended", { sessionId: request.sessionId, reason: "capture-unavailable" });
           sessionIdRef.current = null;
-          setLiveMessage("Live view requested, but native screen capture is unavailable.");
+          setLiveMessage("Live view requested, but screen capture is unavailable.");
           return;
         }
 
         socket.emit("live:view-accepted", { sessionId: request.sessionId });
+        captureRef.current = capture;
+        if (usingDisplayMedia) {
+          setLiveMessage("Browser screen share active. Choose the screen/window once and do not stop the share.");
+        }
         setIsStreaming(true);
 
         const peer = new RTCPeerConnection({
