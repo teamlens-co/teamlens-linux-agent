@@ -137,9 +137,12 @@ fn capture_screen_frame_x11() -> Result<(Vec<u8>, usize, usize), String> {
         let bpl = img.bytes_per_line as usize;
         let bits_per_pixel = img.bits_per_pixel as usize;
         let data = img.data as *const u8;
-        let red_shift = img.red_mask.trailing_zeros();
-        let green_shift = img.green_mask.trailing_zeros();
-        let blue_shift = img.blue_mask.trailing_zeros();
+        let red_mask = img.red_mask as u64;
+        let green_mask = img.green_mask as u64;
+        let blue_mask = img.blue_mask as u64;
+        let red_shift = red_mask.trailing_zeros();
+        let green_shift = green_mask.trailing_zeros();
+        let blue_shift = blue_mask.trailing_zeros();
 
         let mut out = Vec::with_capacity(width * height * 4);
 
@@ -147,23 +150,23 @@ fn capture_screen_frame_x11() -> Result<(Vec<u8>, usize, usize), String> {
             for x in 0..width {
                 let (r, g, b) = if bits_per_pixel == 32 {
                     let pixel =
-                        std::ptr::read_unaligned(data.add(y * bpl + x * 4) as *const u32);
+                        std::ptr::read_unaligned(data.add(y * bpl + x * 4) as *const u32) as u64;
                     (
-                        ((pixel & img.red_mask) >> red_shift) as u8,
-                        ((pixel & img.green_mask) >> green_shift) as u8,
-                        ((pixel & img.blue_mask) >> blue_shift) as u8,
+                        ((pixel & red_mask) >> red_shift) as u8,
+                        ((pixel & green_mask) >> green_shift) as u8,
+                        ((pixel & blue_mask) >> blue_shift) as u8,
                     )
                 } else if bits_per_pixel == 24 {
                     let p = data.add(y * bpl + x * 3);
                     // 24-bit still packs R/G/B, but order depends on server. We
                     // decompose with masks at byte level for safety.
-                    let pixel = (*p.add(0) as u32)
-                        | ((*p.add(1) as u32) << 8)
-                        | ((*p.add(2) as u32) << 16);
+                    let pixel = ((*p.add(0) as u64))
+                        | ((*p.add(1) as u64) << 8)
+                        | ((*p.add(2) as u64) << 16);
                     (
-                        ((pixel & img.red_mask) >> red_shift) as u8,
-                        ((pixel & img.green_mask) >> green_shift) as u8,
-                        ((pixel & img.blue_mask) >> blue_shift) as u8,
+                        ((pixel & red_mask) >> red_shift) as u8,
+                        ((pixel & green_mask) >> green_shift) as u8,
+                        ((pixel & blue_mask) >> blue_shift) as u8,
                     )
                 } else {
                     xlib::XDestroyImage(image);
