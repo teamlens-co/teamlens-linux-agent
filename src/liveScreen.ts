@@ -299,7 +299,7 @@ const captureScreenDisplayMedia = async (): Promise<CaptureHandle | null> => {
       return null;
     }
     const stream = await navigator.mediaDevices.getDisplayMedia({
-      video: { cursor: "always" } as DisplayMediaStreamConstraints["video"],
+      video: { cursor: "always" } as MediaStreamConstraints["video"],
       audio: false,
     });
     const videoTrack = stream.getVideoTracks()[0];
